@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from dotenv import load_dotenv
 
-from utils import parse_channel_input, format_number
+from utils import parse_channel_input, format_number, validate_channel_input, validate_videos_count, validate_output_path
 from youtube_api import get_channel_id, get_channel_stats, get_recent_video_ids, get_video_stats
 from analysis import calculate_averages, calculate_engagement_rate, get_engagement_rating, get_ai_insight
 
@@ -109,10 +109,19 @@ def main():
     )
     args = parser.parse_args()
 
-    query = parse_channel_input(args.channel)
+    try:
+        channel_input = validate_channel_input(args.channel)
+        validate_videos_count(args.videos)
+        if args.output:
+            args.output = validate_output_path(args.output)
+    except ValueError as e:
+        print(f"\nError: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    query = parse_channel_input(channel_input)
 
     try:
-        print(f"\nLooking up channel: {query!r} ...")
+        print(f"\nLooking up channel: {channel_input!r} ...")
         channel_info = get_channel_id(query)
         channel_id = channel_info["id"]
 

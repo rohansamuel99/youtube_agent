@@ -16,6 +16,9 @@ Runs as either a **local web app** (Flask) or a **CLI tool** from the terminal.
 - Optional AI-powered business insight via Claude (Anthropic API)
 - Web UI with a dark theme, animated engagement bar, and formula tooltip
 - CLI mode saves a full Markdown report to disk
+- Rate limiting (5 requests/min, 30/hr per IP)
+- Strict input validation and sanitisation on all user inputs
+- OWASP-aligned security headers, request size limits, and structured logging
 
 ---
 
@@ -180,6 +183,24 @@ Video IDs are fetched via the channel's **uploads playlist** rather than the Sea
 
 ---
 
+## Security
+
+This project follows [OWASP Top 10](https://owasp.org/www-project-top-ten/) best practices:
+
+| Control | Implementation |
+|---------|---------------|
+| Input validation (A03) | All user inputs validated and sanitised before use — length, charset, URL host, numeric range |
+| Injection prevention (A03) | Content-Type enforced; JSON parsed strictly; no user input interpolated into shell or SQL |
+| Rate limiting (A04) | 5 requests/min, 30/hr per IP via `flask-limiter` |
+| Request size limit (A04) | Request body capped at 16 KB — rejects oversized payloads with 413 |
+| Security headers (A05) | `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy` on every response |
+| No debug in production (A05) | Debug mode off by default; enabled only via `FLASK_DEBUG=true` env var |
+| No internal error leakage (A05) | 500 errors return a generic message; full exception logged server-side only |
+| Secure secrets (A02) | API keys stored in `.env` only, never hardcoded or returned in responses |
+| Security logging (A09) | Validation failures, rate limit hits, oversized requests, and errors all logged with truncated IPs |
+
+---
+
 ## Dependencies
 
 | Package | Purpose |
@@ -187,4 +208,5 @@ Video IDs are fetched via the channel's **uploads playlist** rather than the Sea
 | `requests` | YouTube API HTTP calls |
 | `python-dotenv` | Load API keys from `.env` |
 | `flask` | Web server for the UI |
+| `flask-limiter` | Rate limiting |
 | `anthropic` | Claude API for AI insights (optional) |
